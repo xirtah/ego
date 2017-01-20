@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/benbjohnson/ego"
+	"github.com/infinitbyte/ego"
 )
 
 // version is set by the makefile during build.
@@ -104,7 +104,10 @@ func (v *visitor) visit(path string, info os.FileInfo, err error) error {
 	if info == nil {
 		return fmt.Errorf("file not found: %s", path)
 	}
-	if !info.IsDir() && filepath.Ext(path) == ".ego" {
+
+	fmt.Println("walk file: ",path)
+
+	if !info.IsDir() &&(filepath.Ext(path) == ".ego" ||filepath.Ext(path) == ".html"||filepath.Ext(path) == ".htm") {
 		v.paths = append(v.paths, path)
 	}
 	return nil

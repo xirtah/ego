@@ -199,7 +199,7 @@ type Pos struct {
 
 func (p *Pos) write(buf *bytes.Buffer) {
 	if p != nil && p.Path != "" && p.LineNo > 0 {
-		fmt.Fprintf(buf, "//line %s:%d\n", p.Path, p.LineNo)
+		//fmt.Fprintf(buf, "//line %s:%d\n", p.Path, p.LineNo)
 	}
 }
 
