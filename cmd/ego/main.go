@@ -5,13 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"go/scanner"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/infinitbyte/ego"
+	"io/ioutil"
+	"strings"
 )
 
 // version is set by the makefile during build.
@@ -21,7 +22,6 @@ func main() {
 	outfile := flag.String("o", "ego.go", "output file")
 	pkgname := flag.String("package", "", "package name")
 	versionFlag := flag.Bool("version", false, "print version")
-	runFmt := flag.Bool("fmt", true, "run go fmt on the result")
 	flag.Parse()
 	log.SetFlags(0)
 
@@ -46,30 +46,24 @@ func main() {
 
 	// Recursively retrieve all ego templates
 	var v visitor
+	//for _, root := range roots {
+	//	if err := filepath.Walk(root, v.visit); err != nil {
+	//		scanner.PrintError(os.Stderr, err)
+	//		os.Exit(1)
+	//	}
+	//}
+
 	for _, root := range roots {
-		if err := filepath.Walk(root, v.visit); err != nil {
-			scanner.PrintError(os.Stderr, err)
-			os.Exit(1)
-		}
+		v.listAll(root)
 	}
 
-	// Parse every *.ego file.
-	var templates []*ego.Template
-	for _, path := range v.paths {
-		t, err := ego.ParseFile(path)
-		if err != nil {
-			log.Fatal("parse file: ", err)
-		}
-		templates = append(templates, t)
-	}
+}
 
-	// If we have no templates then exit.
-	if len(templates) == 0 {
-		os.Exit(0)
-	}
+func processTemplate(templates []*ego.Template,pkgname string,outfile string)  {
+	fmt.Println("process template, output:",outfile,",package:"+pkgname)
 
 	// Write package to output file.
-	p := &ego.Package{Templates: templates, Name: *pkgname}
+	p := &ego.Package{Templates: templates, Name: pkgname}
 
 	var buf bytes.Buffer
 	// Write template to buffer.
@@ -78,14 +72,12 @@ func main() {
 	}
 
 	result := buf.Bytes()
-	if *runFmt {
-		var err error
-		if result, err = format.Source(result); err != nil {
-			log.Fatal("format: ", err)
-		}
+	var err error
+	if result, err = format.Source(result); err != nil {
+		log.Fatal("format: ", err)
 	}
 
-	f, err := os.Create(*outfile)
+	f, err := os.Create(outfile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,18 +89,61 @@ func main() {
 
 // visitor iterates over
 type visitor struct {
-	paths []string
+
 }
 
-func (v *visitor) visit(path string, info os.FileInfo, err error) error {
-	if info == nil {
-		return fmt.Errorf("file not found: %s", path)
+func (v *visitor)listAll(path string) {
+	fmt.Println("process path:",path)
+
+	files, _ := ioutil.ReadDir(path)
+	var paths []string
+	for _, fi := range files {
+		if fi.IsDir() {
+			v.listAll(path + "/" + fi.Name())
+			//println(path + "/" + fi.Name())
+		}
+		if (filepath.Ext(fi.Name()) == ".ego" ||filepath.Ext(fi.Name()) == ".html"||filepath.Ext(fi.Name()) == ".htm") {
+			println(path + "/" + fi.Name())
+			paths = append(paths, path + "/" + fi.Name())
+		}
 	}
 
-	fmt.Println("walk file: ",path)
 
-	if !info.IsDir() &&(filepath.Ext(path) == ".ego" ||filepath.Ext(path) == ".html"||filepath.Ext(path) == ".htm") {
-		v.paths = append(v.paths, path)
+	fmt.Println("generate template:",path)
+	// Parse every template file.
+	var templates []*ego.Template
+	for _, path := range paths {
+		t, err := ego.ParseFile(path)
+		if err != nil {
+			log.Fatal("parse file, ",path,", ", err)
+		}
+		templates = append(templates, t)
 	}
-	return nil
+
+	// If we have no templates then exit.
+	if len(templates) == 0 {
+		return
+	}
+
+	ap,_:=filepath.Abs(path)
+	as:=strings.Split(ap,"/")
+
+	lastDirName:=as[len(as)-1]
+
+	fmt.Println("path name: ",lastDirName)
+
+	processTemplate(templates,lastDirName,path+"/ego.go")
 }
+
+//func (v *visitor) visit(path string, info os.FileInfo, err error) error {
+//	if info == nil {
+//		return fmt.Errorf("file not found: %s", path)
+//	}
+//
+//	fmt.Println("walk file: ",path)
+//
+//	if !info.IsDir() &&(filepath.Ext(path) == ".ego" ||filepath.Ext(path) == ".html"||filepath.Ext(path) == ".htm") {
+//		v.paths = append(v.paths, path)
+//	}
+//	return nil
+//}

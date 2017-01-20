@@ -1,7 +1,9 @@
 VERSION=0.1.0
 GOLDFLAGS="-X main.version $(VERSION)"
 
-default:
+build:
+	go build cmd/ego/main.go
+	mv main  ~/go/bin/ego
 
 bin:
 	mkdir -p bin
