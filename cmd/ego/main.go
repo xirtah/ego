@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"flag"
-	"fmt"
 	"go/format"
 	"log"
 	"os"
@@ -27,7 +26,7 @@ func main() {
 
 	// If the version flag is set then print the version.
 	if *versionFlag {
-		fmt.Printf("ego v%s\n", version)
+		//fmt.Printf("ego v%s\n", version)
 		return
 	}
 
@@ -60,7 +59,7 @@ func main() {
 }
 
 func processTemplate(templates []*ego.Template,pkgname string,outfile string)  {
-	fmt.Println("process template, output:",outfile,",package:"+pkgname)
+	//fmt.Println("process template, output:",outfile,",package:"+pkgname)
 
 	// Write package to output file.
 	p := &ego.Package{Templates: templates, Name: pkgname}
@@ -93,7 +92,7 @@ type visitor struct {
 }
 
 func (v *visitor)listAll(path string) {
-	fmt.Println("process path:",path)
+	//fmt.Println("process path:",path)
 
 	files, _ := ioutil.ReadDir(path)
 	var paths []string
@@ -103,13 +102,13 @@ func (v *visitor)listAll(path string) {
 			//println(path + "/" + fi.Name())
 		}
 		if (filepath.Ext(fi.Name()) == ".ego" ||filepath.Ext(fi.Name()) == ".html"||filepath.Ext(fi.Name()) == ".htm") {
-			println(path + "/" + fi.Name())
+			//println(path + "/" + fi.Name())
 			paths = append(paths, path + "/" + fi.Name())
 		}
 	}
 
 
-	fmt.Println("generate template:",path)
+	//fmt.Println("generate template:",path)
 	// Parse every template file.
 	var templates []*ego.Template
 	for _, path := range paths {
@@ -130,7 +129,7 @@ func (v *visitor)listAll(path string) {
 
 	lastDirName:=as[len(as)-1]
 
-	fmt.Println("path name: ",lastDirName)
+	//fmt.Println("path name: ",lastDirName)
 
 	processTemplate(templates,lastDirName,path+"/ego.go")
 }
