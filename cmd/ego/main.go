@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/infinitbyte/ego"
+	"github.com/xirtah/ego"
 	"io/ioutil"
 	"strings"
 )
